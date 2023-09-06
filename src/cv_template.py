@@ -14,10 +14,12 @@ class Template(object):
 	def __init__(self, args):
 		super(Template, self).__init__()
 		self.args = args
-		#Suscribrirse a la cámara
-		self.Sub_Cam = rospy.Subscriber("topico", Image, self.procesar_img)
+		#Suscribrirse a la camara
+		self.Sub_Cam = rospy.Subscriber("/duckiebot/camera_node/image/raw", Image, self.procesar_img)
         #Publicar imagen(es)
-		self.pub_img = rospy.Publisher("topico", Image, queue_size = 1)
+		self.pub_img = rospy.Publisher("/duckiebot/camera_note/image/processed", Image, queue_size = 1)
+
+		self.min_area = 100
 		#self.pub_img = rospy.Publisher("mas", Image, queue_size = 1)
 
 
@@ -35,29 +37,29 @@ class Template(object):
 			#cv2.COLOR_BGR2GRAY
 			#cv2.COLOR_BGR2RGB
 
-		image_out = cv2.cvtColor(image, "Espacio de color") 
+		image_out = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
 
 		#Definir rangos para la mascara
 
-		lower_limit = np.array([ , , ])
-		upper_limit =np.array([ , , ])
+		lower_limit = np.array([20, 90, 150 ])
+		upper_limit = np.array([60, 255, 255 ])
 
 		#Mascara
 		mask = cv2.inRange(image_out, lower_limit, upper_limit)
 		image_out = cv2.bitwise_and(image, image, mask=mask)
 
-		# Operaciones morfológicas, normalmente se utiliza para "limpiar" la mascara
-		kernel = np.ones(('ancho' , 'largo'), np.uint8)
-		img_erode = cv2.erode(mask, kernel, iterations="numero de iteraciones") #Erosion
-		img_dilate = cv2.dilate(img_erode, kernel, iterations="numero de iteraciones") #Dilatar 
+		# Operaciones morfologicas, normalmente se utiliza para "limpiar" la mascara
+		kernel = np.ones((3 , 3), np.uint8)
+		img_erode = cv2.erode(mask, kernel, iterations=1) #Erosion
+		img_dilate = cv2.dilate(img_erode, kernel, iterations=1) #Dilatar 
 
 		# Definir blobs
 		_,contours, hierarchy = cv2.findContours(img_dilate,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 		for cnt in contours:
 			AREA = cv2.contourArea(cnt)
-			if AREA>"Tamaño area en pixeles": #Filtrar por tamaño de blobs
+			if AREA>self.min_area: #Filtrar por tamano de blobs
 				x,y,w,h = cv2.boundingRect(cnt)
-				cv2.rectangle(image, ("coordenada","coordenada"), ("coordenada","coordenada"), ("rojo","azul","verde"), "tamaño del rectangulo en pixeles")
+				cv2.rectangle(image, (x,y), (x + w,y + h), (0, 0, 255), 2)
 			else:
 				None
 

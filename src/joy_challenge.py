@@ -28,7 +28,7 @@ class Template(object):
         x = msg.axes[0]
         z = msg.axes[3]
 
-	factor_v = 100
+	factor_v = 0.7
 	if abs(x) <= 0.15: x = 0
 	
 	velocity = ((y_right - 1) - (y_left - 1)) * factor_v
@@ -40,8 +40,8 @@ class Template(object):
 		self.wheels.vel_left = -x if x > 0 else 0 
 		self.wheels.vel_right = x if -x > 0 else 0
 	else:
-		self.wheels.vel_left = velocity * (1 + x)
-		self.wheels.vel_right = velocity * (1 - x)
+		self.wheels.vel_left = velocity * (1 + x) * factor_v
+		self.wheels.vel_right = velocity * (1 - x) * factor_v
 
         if a == 1:
             self.wheels.vel_left = 0
