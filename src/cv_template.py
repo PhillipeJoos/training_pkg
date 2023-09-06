@@ -19,8 +19,8 @@ class Template(object):
         #Publicar imagen(es)
 		self.pub_img = rospy.Publisher("/duckiebot/camera_note/image/processed", Image, queue_size = 1)
 
-		self.min_area = 100
-		#self.pub_img = rospy.Publisher("mas", Image, queue_size = 1)
+		self.min_area = 70
+		self.pub_mask = rospy.Publisher("/duckiebot/camera_note/image/mask", Image, queue_size = 1)
 
 
 	def procesar_img(self, msg):
@@ -41,7 +41,7 @@ class Template(object):
 
 		#Definir rangos para la mascara
 
-		lower_limit = np.array([20, 90, 150 ])
+		lower_limit = np.array([20, 100, 80 ])
 		upper_limit = np.array([60, 255, 255 ])
 
 		#Mascara
@@ -65,7 +65,9 @@ class Template(object):
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
+		msg_mask = bridge.cv2_to_imgmsg(image_out, "bgr8")
 		self.pub_img.publish(msg)
+		self.pub_mask.publish(msg_mask)
 
 def main():
 	rospy.init_node('test') #creacion y registro del nodo!
