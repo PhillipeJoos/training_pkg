@@ -19,9 +19,9 @@ class Template(object):
         #Publicar imagen(es)
 		self.pub_img = rospy.Publisher("/duckiebot/camera_note/image/processed", Image, queue_size = 1)
 
-		self.min_area = 70
-		self.pub_mask = rospy.Publisher("/duckiebot/camera_note/image/mask", Image, queue_size = 1)
-
+		self.min_area = 100
+		self.pub_mask_yellow = rospy.Publisher("/duckiebot/camera_note/image/mask_yellow", Image, queue_size = 1)
+		self.pub_mask_orange = rospy.Publisher("/duckiebot/camera_note/image/mask_orange", Image, queue_size = 1)
 
 	def procesar_img(self, msg):
 		#Transformar Mensaje a Imagen
@@ -39,35 +39,42 @@ class Template(object):
 
 		image_out = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
 
-		#Definir rangos para la mascara
-
-		lower_limit = np.array([20, 100, 80 ])
-		upper_limit = np.array([60, 255, 255 ])
+		# Definir rangos para la mascara del color amarillo
+		lower_limit_yellow = np.array([15, 100, 150])
+		upper_limit_yellow = np.array([28, 255, 255])
+ 
+		# Definir rangos para la mascara del color naranja
+		lower_limit_orange = np.array([15, 100, 100])
+		upper_limit_orange = np.array([20, 255, 255])
 
 		#Mascara
-		mask = cv2.inRange(image_out, lower_limit, upper_limit)
-		image_out = cv2.bitwise_and(image, image, mask=mask)
+		mask_yellow = cv2.inRange(image_out, lower_limit_yellow, upper_limit_yellow)
+		mask_orange = cv2.inRange(image_out, lower_limit_orange, upper_limit_orange)
+		image_out_yellow = cv2.bitwise_and(image, image, mask=mask_yellow)
+		image_out_orange = cv2.bitwise_and(image, image, mask=mask_orange)
 
 		# Operaciones morfologicas, normalmente se utiliza para "limpiar" la mascara
 		kernel = np.ones((3 , 3), np.uint8)
-		img_erode = cv2.erode(mask, kernel, iterations=1) #Erosion
-		img_dilate = cv2.dilate(img_erode, kernel, iterations=1) #Dilatar 
+		img_erode = cv2.erode(mask_yellow, kernel, iterations=4) #Erosion
+		img_dilate = cv2.dilate(img_erode, kernel, iterations=4) #Dilatar 
 
 		# Definir blobs
 		_,contours, hierarchy = cv2.findContours(img_dilate,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 		for cnt in contours:
 			AREA = cv2.contourArea(cnt)
-			if AREA>self.min_area: #Filtrar por tamano de blobs
+			if AREA > self.min_area: #Filtrar por tamano de blobs
 				x,y,w,h = cv2.boundingRect(cnt)
-				cv2.rectangle(image, (x,y), (x + w,y + h), (0, 0, 255), 2)
+				cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 			else:
 				None
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
-		msg_mask = bridge.cv2_to_imgmsg(image_out, "bgr8")
+		msg_mask_yellow = bridge.cv2_to_imgmsg(image_out_yellow, "bgr8")
+		msg_mask_orange = bridge.cv2_to_imgmsg(image_out_orange, "bgr8")
 		self.pub_img.publish(msg)
-		self.pub_mask.publish(msg_mask)
+		self.pub_mask_yellow.publish(msg_mask_yellow)
+		self.pub_mask_orange.publish(msg_mask_orange)
 
 def main():
 	rospy.init_node('test') #creacion y registro del nodo!

@@ -8,60 +8,80 @@ from duckietown_msgs.msg import WheelsCmdStamped
 
 
 class Template(object):
-    def __init__(self, args):
-        super(Template, self).__init__()
-        self.args = args
-        #sucribir a joy
-        self.sub = rospy.Subscriber("/duckiebot/joy", Joy, self.callback)
-        #publicar la intrucciones del control en possible_cmd
-        self.publi = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 10)
-        #self.twist = Twist2DStamped()
-	self.wheels = WheelsCmdStamped()
+	def __init__(self, args):
+		super(Template, self).__init__()
+		self.args = args
+		#sucribir a joy
+		self.sub = rospy.Subscriber("/duckiebot/joy", Joy, self.callback)
+		#publicar la intrucciones del control en possible_cmd
+		self.publi = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 10)
+		#self.twist = Twist2DStamped()
+		self.wheels = WheelsCmdStamped()
 
-    #def publicar(self, msg):
-        #self.publi.publish(msg)
+	#def publicar(self, msg):
+		#self.publi.publish(msg)
 
-    def callback(self,msg):
-        a = msg.buttons[1]
-	y_left = msg.axes[2]
-        y_right = msg.axes[5]
-        x = msg.axes[0]
-        z = msg.axes[3]
+	def callback(self,msg):
+		
+		# buttons
+		A = msg.buttons[0]
+		B = msg.buttons[1] # freno de mano
+		X = msg.buttons[2]
+		Y = msg.buttons[3]
+		Select = msg.buttons[6]
+		Start = msg.buttons[7]
+		DPad_left = msg.buttons[11]
+		DPad_right = msg.buttons[12]
+		DPad_up = msg.buttons[13]
+		DPad_down = msg.buttons[14]
+		LT = msg.axes[2] # retroceder
+		RT = msg.axes[5] # avanzar
+		
 
-	factor_v = 0.7
-	if abs(x) <= 0.15: x = 0
-	
-	velocity = ((y_right - 1) - (y_left - 1)) * factor_v
-        print(y_left, y_right, x, z)
-	#if (x == 0):
-#		self.wheels.vel_left = velocity
-#        	self.wheels.vel_right = velocity
-	if (y_left == 1 and y_right == 1):
-		self.wheels.vel_left = -x if x > 0 else 0 
-		self.wheels.vel_right = x if -x > 0 else 0
-	else:
-		self.wheels.vel_left = velocity * (1 + x) * factor_v
-		self.wheels.vel_right = velocity * (1 - x) * factor_v
+		# joysticks
+		JL_x = msg.axes[0] # virar izq-der
+		JL_y = msg.axes[1]
+		JR_x = msg.axes[3]
+		JR_y = msg.axes[4]
 
-        if a == 1:
-            self.wheels.vel_left = 0
-            self.wheels.vel_right = 0
+		factor_v = 2
+		
+		if abs(JL_x) <= 0.15: x = 0
+		JL_x *= 0.7
+		
+		velocity = ((RT - 1) - (LT - 1)) / 2 * factor_v
+		
+		#print(, y_right, x, z)
+		#if (x == 0):
+	#		self.wheels.vel_left = velocity
+	#        	self.wheels.vel_right = velocity
+		
+		if (LT == 1 and RT == 1): # quieto
+			self.wheels.vel_left = -JL_x if JL_x > 0 else 0 
+			self.wheels.vel_right = JL_x if -JL_x > 0 else 0
+		else: # cuando se mueve
+			self.wheels.vel_left = (velocity * (1 + JL_x)) * factor_v
+			self.wheels.vel_right = (velocity * (1 - JL_x)) * factor_v
 
-        self.publi.publish(self.wheels)
+			if B == 1:
+				self.wheels.vel_left = 0
+				self.wheels.vel_right = 0
+
+		self.publi.publish(self.wheels)
 
 
 
 
 
 def main():
-    rospy.init_node('test') #creacion y registro del nodo!
+	rospy.init_node('test') #creacion y registro del nodo!
 
-    obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
+	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 
-    #obj.publicar() #llama al metodo publicar del objeto obj de tipo Template
+	#obj.publicar() #llama al metodo publicar del objeto obj de tipo Template
 
-    rospy.spin() #funcion de ROS que evita que el programa termine -  se debe usar en  Subscribers
+	rospy.spin() #funcion de ROS que evita que el programa termine -  se debe usar en  Subscribers
 
 
 if __name__ =='__main__':
-    main()
+	main()
