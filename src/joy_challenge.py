@@ -27,7 +27,6 @@ class Template(object):
 		#self.publi.publish(msg)
 
 	def callback_min_distance(self, msg):
-		print(msg.data)
 		self.min_distance = msg.data
 
 	def callback(self,msg):
@@ -45,7 +44,6 @@ class Template(object):
 		DPad_down = msg.buttons[14]
 		LT = msg.axes[2] # retroceder
 		RT = msg.axes[5] # avanzar
-		
 
 		# joysticks
 		JL_x = msg.axes[0] # virar izq-der
@@ -53,10 +51,16 @@ class Template(object):
 		JR_x = msg.axes[3]
 		JR_y = msg.axes[4]
 
-		factor_v = 2
+		#print(f"B: {B}, LT: {LT}, RT: {RT}, JL_x: {JL_x}")
+		print("B: " + str(B))
+		print("LT: " + str(LT))
+		print("RT: " + str(RT))
+		print("JL_x: " + str(JL_x))
+
+
+		factor_v = 1
 		
 		if abs(JL_x) <= 0.15: x = 0
-		JL_x *= 0.7
 		
 		velocity = ((RT - 1) - (LT - 1)) / 2 * factor_v
 		
@@ -66,15 +70,21 @@ class Template(object):
 	#        	self.wheels.vel_right = velocity
 		
 		if (LT == 1 and RT == 1): # quieto
-			self.wheels.vel_left = -JL_x if JL_x > 0 else 0 
-			self.wheels.vel_right = JL_x if -JL_x > 0 else 0
+			self.wheels.vel_left = -JL_x #if JL_x > 0 else 0 
+			self.wheels.vel_right = JL_x #if -JL_x > 0 else 0
 		else: # cuando se mueve
-			self.wheels.vel_left = (velocity * (1 + JL_x)) * factor_v
-			self.wheels.vel_right = (velocity * (1 - JL_x)) * factor_v
+			JL_x *= 0.5
+			self.wheels.vel_left = (velocity - JL_x) * factor_v
+			self.wheels.vel_right = (velocity + JL_x) * factor_v
 
 			if B == 1 or self.min_distance < 20:
 				self.wheels.vel_left = 0
 				self.wheels.vel_right = 0
+
+		#print(f"vel_left: {self.wheels.vel_left}, vel_right: {self.wheels.vel_right}")
+		print("velocity: " + str(velocity))
+		print("vel_left: " + str(self.wheels.vel_left))
+		print("vel_right: " + str(self.wheels.vel_right))
 
 		self.publi.publish(self.wheels)
 
