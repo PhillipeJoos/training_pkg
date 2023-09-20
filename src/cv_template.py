@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y tipo Int32
+from std_msgs.msg import String, Int32, Float32 # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist, Point # importar mensajes de ROS tipo geometry / Twist
 from sensor_msgs.msg import Image # importar mensajes de ROS tipo Image
 import cv2 # importar libreria opencv
@@ -15,13 +15,15 @@ class Template(object):
 		super(Template, self).__init__()
 		self.args = args
 		#Suscribrirse a la camara
-		self.Sub_Cam = rospy.Subscriber("/duckiebot/camera_node/image/raw", Image, self.procesar_img)
+		self.Sub_Cam = rospy.Subscriber("/duckiebot/camera_node/image/rect", Image, self.procesar_img)
         #Publicar imagen(es)
 		self.pub_img = rospy.Publisher("/duckiebot/camera_note/image/processed", Image, queue_size = 1)
 
 		self.min_area = 100
 		self.pub_mask_yellow = rospy.Publisher("/duckiebot/camera_note/image/mask_yellow", Image, queue_size = 1)
 		self.pub_mask_blue = rospy.Publisher("/duckiebot/camera_note/image/mask_blue", Image, queue_size = 1)
+
+		self.pub_min_distance = rospy.Publisher("/duckiebot/wheels_driver_node/min_distance", Float32, queue_size = 1)
 
 	def procesar_img(self, msg):
 		#Transformar Mensaje a Imagen
@@ -61,6 +63,9 @@ class Template(object):
 		# Definir blobs
 		_,contours, hierarchy = cv2.findContours(img_dilate,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
+		# Distancia minima
+		min_distance = 1000
+
 		for cnt in contours:
 			AREA = cv2.contourArea(cnt)
 			if AREA > self.min_area: #Filtrar por tamano de blobs
@@ -69,15 +74,22 @@ class Template(object):
 
 				# Calculamos la distancia real (Dr)
 				# Dr = (dr * f) / w
-				f = 101.85916357881302
+				f = 101 # valor calibrado
 				dr = 3.9 # cm
 
 				Dr = round((dr * f) / w, 3)
+
+				# reasignamos la distancia minima
+				if Dr < min_distance:
+					min_distance = Dr
 
 				# Imprimimos la distancia junto con el blob
 				cv2.putText(image, str(Dr), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 			else:
 				None
+
+		# Publicar distancia minima
+		self.pub_min_distance.publish(min_distance)
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
@@ -88,7 +100,7 @@ class Template(object):
 		self.pub_mask_blue.publish(msg_mask_blue)
 
 def main():
-	rospy.init_node('test') #creacion y registro del nodo!
+	rospy.init_node('test_opencv') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy #importar ros para python
-from std_msgs.msg import String, Int32 #importa mensajes de ROS tipo String y Int32
+from std_msgs.msg import String, Int32, Float32 #importa mensajes de ROS tipo String y Int32
 from sensor_msgs.msg import Joy # impor mensaje tipo Joy
 from geometry_msgs.msg import Twist # importar mensajes de ROS tipo geometry / Twist
 from duckietown_msgs.msg import WheelsCmdStamped
@@ -18,8 +18,17 @@ class Template(object):
 		#self.twist = Twist2DStamped()
 		self.wheels = WheelsCmdStamped()
 
+		#suscribir a wheels_driver_node/min_distance
+		self.sub_min_distance = rospy.Subscriber("/duckiebot/wheels_driver_node/min_distance", Float32, self.callback_min_distance)
+
+		self.min_distance = 1000
+
 	#def publicar(self, msg):
 		#self.publi.publish(msg)
+
+	def callback_min_distance(self, msg):
+		print(msg.data)
+		self.min_distance = msg.data
 
 	def callback(self,msg):
 		
@@ -63,7 +72,7 @@ class Template(object):
 			self.wheels.vel_left = (velocity * (1 + JL_x)) * factor_v
 			self.wheels.vel_right = (velocity * (1 - JL_x)) * factor_v
 
-			if B == 1:
+			if B == 1 or self.min_distance < 20:
 				self.wheels.vel_left = 0
 				self.wheels.vel_right = 0
 
@@ -74,7 +83,7 @@ class Template(object):
 
 
 def main():
-	rospy.init_node('test') #creacion y registro del nodo!
+	rospy.init_node('test_joystick') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 
