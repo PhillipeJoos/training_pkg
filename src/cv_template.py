@@ -21,7 +21,7 @@ class Template(object):
 
 		self.min_area = 100
 		self.pub_mask_yellow = rospy.Publisher("/duckiebot/camera_note/image/mask_yellow", Image, queue_size = 1)
-		self.pub_mask_orange = rospy.Publisher("/duckiebot/camera_note/image/mask_orange", Image, queue_size = 1)
+		self.pub_mask_blue = rospy.Publisher("/duckiebot/camera_note/image/mask_blue", Image, queue_size = 1)
 
 	def procesar_img(self, msg):
 		#Transformar Mensaje a Imagen
@@ -40,18 +40,18 @@ class Template(object):
 		image_out = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
 
 		# Definir rangos para la mascara del color amarillo
-		lower_limit_yellow = np.array([15, 100, 150])
-		upper_limit_yellow = np.array([28, 255, 255])
+		lower_limit_yellow = np.array([20, 100, 100])
+		upper_limit_yellow = np.array([35, 255, 255])
  
-		# Definir rangos para la mascara del color naranja
-		lower_limit_orange = np.array([15, 100, 100])
-		upper_limit_orange = np.array([20, 255, 255])
+		# Definir rangos para la mascara del color azul
+		lower_limit_blue = np.array([105,  80, 100])
+		upper_limit_blue = np.array([135, 255, 255])
 
 		#Mascara
 		mask_yellow = cv2.inRange(image_out, lower_limit_yellow, upper_limit_yellow)
-		mask_orange = cv2.inRange(image_out, lower_limit_orange, upper_limit_orange)
+		mask_blue = cv2.inRange(image_out, lower_limit_blue, upper_limit_blue)
 		image_out_yellow = cv2.bitwise_and(image, image, mask=mask_yellow)
-		image_out_orange = cv2.bitwise_and(image, image, mask=mask_orange)
+		image_out_blue   = cv2.bitwise_and(image, image, mask=mask_blue)
 
 		# Operaciones morfologicas, normalmente se utiliza para "limpiar" la mascara
 		kernel = np.ones((3 , 3), np.uint8)
@@ -60,21 +60,32 @@ class Template(object):
 
 		# Definir blobs
 		_,contours, hierarchy = cv2.findContours(img_dilate,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
 		for cnt in contours:
 			AREA = cv2.contourArea(cnt)
 			if AREA > self.min_area: #Filtrar por tamano de blobs
 				x,y,w,h = cv2.boundingRect(cnt)
 				cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+				# Calculamos la distancia real (Dr)
+				# Dr = (dr * f) / w
+				f = 101.85916357881302
+				dr = 3.9 # cm
+
+				Dr = round((dr * f) / w, 3)
+
+				# Imprimimos la distancia junto con el blob
+				cv2.putText(image, str(Dr), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 			else:
 				None
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
 		msg_mask_yellow = bridge.cv2_to_imgmsg(image_out_yellow, "bgr8")
-		msg_mask_orange = bridge.cv2_to_imgmsg(image_out_orange, "bgr8")
+		msg_mask_blue = bridge.cv2_to_imgmsg(image_out_blue, "bgr8")
 		self.pub_img.publish(msg)
 		self.pub_mask_yellow.publish(msg_mask_yellow)
-		self.pub_mask_orange.publish(msg_mask_orange)
+		self.pub_mask_blue.publish(msg_mask_blue)
 
 def main():
 	rospy.init_node('test') #creacion y registro del nodo!
