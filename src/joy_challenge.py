@@ -77,7 +77,11 @@ class Template(object):
 			self.wheels.vel_left = (velocity - JL_x) * factor_v
 			self.wheels.vel_right = (velocity + JL_x) * factor_v
 
-			if B == 1 or self.min_distance < 20:
+			# condiciones de freno
+			cond_1 = B == 1
+			cond_2 = self.min_distance < 20 if LT == 1.0 else False
+
+			if cond_1 or cond_2:
 				self.wheels.vel_left = 0
 				self.wheels.vel_right = 0
 
