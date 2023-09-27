@@ -18,16 +18,8 @@ class Template(object):
 		#self.twist = Twist2DStamped()
 		self.wheels = WheelsCmdStamped()
 
-		#suscribir a wheels_driver_node/min_distance
-		self.sub_min_distance = rospy.Subscriber("/duckiebot/wheels_driver_node/min_distance", Float32, self.callback_min_distance)
-
-		self.min_distance = 1000
-
-	#def publicar(self, msg):
-		#self.publi.publish(msg)
-
-	def callback_min_distance(self, msg):
-		self.min_distance = msg.data
+		#publicamos en duckiebot/possible_cmd
+		self.pub_possible_cmd = rospy.Publisher("/duckiebot/possible_cmd", WheelsCmdStamped, queue_size = 10)
 
 	def callback(self,msg):
 		
@@ -78,10 +70,10 @@ class Template(object):
 			self.wheels.vel_right = (velocity + JL_x) * factor_v
 
 			# condiciones de freno
-			cond_1 = B == 1
-			cond_2 = self.min_distance < 20 if LT == 1.0 else False
+			#cond_1 = B == 1
+			#cond_2 = self.min_distance < 20 if LT == 1.0 else False
 
-			if cond_1 or cond_2:
+			if B == 1:
 				self.wheels.vel_left = 0
 				self.wheels.vel_right = 0
 
@@ -90,14 +82,14 @@ class Template(object):
 		print("vel_left: " + str(self.wheels.vel_left))
 		print("vel_right: " + str(self.wheels.vel_right))
 
-		self.publi.publish(self.wheels)
+		self.pub_possible_cmd.publish(self.wheels)
 
 
 
 
 
 def main():
-	rospy.init_node('test_joystick') #creacion y registro del nodo!
+	rospy.init_node('joy_control') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 

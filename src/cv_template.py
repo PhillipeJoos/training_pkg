@@ -23,7 +23,7 @@ class Template(object):
 		self.pub_mask_yellow = rospy.Publisher("/duckiebot/camera_note/image/mask_yellow", Image, queue_size = 1)
 		self.pub_mask_blue = rospy.Publisher("/duckiebot/camera_note/image/mask_blue", Image, queue_size = 1)
 
-		self.pub_min_distance = rospy.Publisher("/duckiebot/wheels_driver_node/min_distance", Float32, queue_size = 1)
+		self.pub_posicionPato = rospy.Publisher("/duckiebot/posicionPato", Float32, queue_size = 1)
 
 	def procesar_img(self, msg):
 		#Transformar Mensaje a Imagen
@@ -89,7 +89,7 @@ class Template(object):
 				None
 
 		# Publicar distancia minima
-		self.pub_min_distance.publish(min_distance)
+		self.pub_posicionPato.publish(min_distance)
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
@@ -100,7 +100,7 @@ class Template(object):
 		self.pub_mask_blue.publish(msg_mask_blue)
 
 def main():
-	rospy.init_node('test_opencv') #creacion y registro del nodo!
+	rospy.init_node('camera_node') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
 
