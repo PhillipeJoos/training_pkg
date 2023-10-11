@@ -6,7 +6,6 @@ from sensor_msgs.msg import Joy # impor mensaje tipo Joy
 from geometry_msgs.msg import Twist # importar mensajes de ROS tipo geometry / Twist
 from duckietown_msgs.msg import WheelsCmdStamped
 
-
 class Template(object):
 	def __init__(self, args):
 		super(Template, self).__init__()

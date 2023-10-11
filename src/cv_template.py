@@ -23,7 +23,7 @@ class Template(object):
 		self.pub_mask_yellow = rospy.Publisher("/duckiebot/camera_note/image/mask_yellow", Image, queue_size = 1)
 		self.pub_mask_blue = rospy.Publisher("/duckiebot/camera_note/image/mask_blue", Image, queue_size = 1)
 
-		self.pub_posicionPato = rospy.Publisher("/duckiebot/posicionPato", Float32, queue_size = 1)
+		self.pub_posicionPato = rospy.Publisher("/duckiebot/posicionPato", Point, queue_size = 1)
 
 	def procesar_img(self, msg):
 		#Transformar Mensaje a Imagen
@@ -66,6 +66,9 @@ class Template(object):
 		# Distancia minima
 		min_distance = 1000
 
+		x_min = 160
+		y_min = 120
+
 		for cnt in contours:
 			AREA = cv2.contourArea(cnt)
 			if AREA > self.min_area: #Filtrar por tamano de blobs
@@ -81,6 +84,8 @@ class Template(object):
 
 				# reasignamos la distancia minima
 				if Dr < min_distance:
+					x_min = x
+					y_min = y
 					min_distance = Dr
 
 				# Imprimimos la distancia junto con el blob
@@ -89,7 +94,11 @@ class Template(object):
 				None
 
 		# Publicar distancia minima
-		self.pub_posicionPato.publish(min_distance)
+		position = Point()
+		position.x = x_min
+		position.y = y_min
+		position.z = min_distance
+		self.pub_posicionPato.publish(position)
 
 		# Publicar imagen final
 		msg = bridge.cv2_to_imgmsg(image, "bgr8")
