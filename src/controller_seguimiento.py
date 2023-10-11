@@ -24,47 +24,49 @@ class Template(object):
 		self.wheels = WheelsCmdStamped()
 
 		# error de posicion del pato
-		self.error_x = 30
+		self.error_x = 60
 		self.error_y = 0.5
-		self.error_z = 5
+		self.error_z = 7
+		self.z = 35
 
 		# dimensiones de la camara
 		self.cam_width = 320
 		self.cam_height = 240
 
 		# velocidad de movimiento
-		self.vel = 0.8
+		self.vel = 0.5
 
 	def callback_possible_cmd(self, msg):
 		self.wheels = msg
 		self.stalker()
 
 	def callback_posicionPato(self, msg):
+		print(msg)
 		self.posicionPato = msg
 		self.stalker()
 	
 	def stalker(self):
 
-		print("error_z", self.error_z)
+		print(self.posicionPato.x)
 		print("posicionPato.z", self.posicionPato.z)
 
-		if (self.posicionPato.z > 900 or self.posicionPato.z < 10):
+		if (self.posicionPato.z == 100000):
 			self.wheels.vel_left = 0
 			self.wheels.vel_right = 0
 		# primero avanzamos en la direccion del pato hasta que estemos a 20 cm
-		elif (self.posicionPato.z > 20 + self.error_z):
+		elif (self.posicionPato.z > self.z + self.error_z):
 			self.wheels.vel_left = -self.vel
 			self.wheels.vel_right = -self.vel
-		elif (self.posicionPato.z < 20 - self.error_z):
+		elif (self.posicionPato.z < self.z - self.error_z):
 			self.wheels.vel_left = self.vel
 			self.wheels.vel_right = self.vel
 		# luego giramos hasta que el pato este en el centro de la imagen
 		elif (self.posicionPato.x > self.cam_width/2 + self.error_x):
-			self.wheels.vel_left = -self.vel
-			self.wheels.vel_right = self.vel
-		elif (self.posicionPato.x < self.cam_width/2 - self.error_x):
 			self.wheels.vel_left = self.vel
 			self.wheels.vel_right = -self.vel
+		elif (self.posicionPato.x < self.cam_width/2 - self.error_x):
+			self.wheels.vel_left = -self.vel
+			self.wheels.vel_right = self.vel
 		else:
 			self.wheels.vel_left = 0
 			self.wheels.vel_right = 0
