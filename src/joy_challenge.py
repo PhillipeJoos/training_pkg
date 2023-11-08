@@ -81,11 +81,7 @@ class Template(object):
 		print("vel_left: " + str(self.wheels.vel_left))
 		print("vel_right: " + str(self.wheels.vel_right))
 
-		self.pub_possible_cmd.publish(self.wheels)
-
-
-
-
+		self.publi.publish(self.wheels)
 
 def main():
 	rospy.init_node('joy_control') #creacion y registro del nodo!

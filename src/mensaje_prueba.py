@@ -13,11 +13,24 @@ class Template(object):
 
 		self.sub_instruccion = rospy.Subscriber("/duckiebot/voz/resp", String, self.callback_instruccion)
 		self.engine = pyttsx3.init()
+		self.engine.setProperty('voice', 'spanish-latin-am')
+		self.engine.setProperty('volume', 15.0)
+		self.engine.setProperty('rate', 150)
 
+		self.instrucciones = {
+			"avanzar": ,
+		}
+
+		self.engine.say("Quack quack!!!")
+		self.engine.runAndWait()
+				
 	def callback_instruccion(self, msg):
 		print(msg.data)
 		self.engine.say(msg.data)
 		self.engine.runAndWait()
+	
+	def avanzar(distancia):
+		pass
 
 def main():
 	rospy.init_node('escucha') #creacion y registro del nodo!
