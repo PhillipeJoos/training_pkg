@@ -19,17 +19,19 @@ class Template(object):
 		self.sub_instruccion = rospy.Subscriber("/duckiebot/voz/resp", String, self.callback_instruccion)
 		
 		# publishers
-		self.pub_wheels = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 10)
+		self.pub_wheels = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 1)
 		self.wheels = WheelsCmdStamped()
 
 		self.engine = pyttsx3.init()
 		self.engine.setProperty('voice', 'spanish-latin-am')
-		self.engine.setProperty('volume', 15.0)
+		self.engine.setProperty('volume', 5.0)
 		self.engine.setProperty('rate', 150)
 
 		self.instrucciones = {
 			"avanzar": self.avanzar,
 			"bailar": self.bailar,
+			"parar": self.parar,
+			"girar": self.girar
 		}
 
 		self.dance_music = "portal_radio_song.mp3"
@@ -127,6 +129,53 @@ class Template(object):
 		self.engine.runAndWait()
 
 		os.system("pkill mpg123")
+
+	def parar(self, parametros):
+		self.engine.say("Deteniendome")
+		self.engine.runAndWait()
+
+		self.wheels.vel_left = 0
+		self.wheels.vel_right = 0
+
+		self.pub_wheels.publish(self.wheels)
+
+		exit()
+
+	def girar(self, parametros):
+		direccion = parametros[0]
+		angulo = parametros[1]
+
+		self.engine.say("Girando " + direccion + " " + angulo + " grados")
+		self.engine.runAndWait()
+
+		# girar una cantidad "angulo"
+		tiempo = (float(angulo)) / 90 
+		tiempo = tiempo * 0.4
+
+		if direccion == "izquierda":
+			self.wheels.vel_left = 1
+			self.wheels.vel_right = -1
+
+			self.pub_wheels.publish(self.wheels)
+			
+			time.sleep(tiempo)
+			
+		elif direccion == "derecha":
+			self.wheels.vel_left = -1
+			self.wheels.vel_right = 1
+
+			self.pub_wheels.publish(self.wheels)
+
+			time.sleep(tiempo)
+	
+		# detenerse
+		self.wheels.vel_left = 0
+		self.wheels.vel_right = 0
+
+		self.pub_wheels.publish(self.wheels)
+
+		self.engine.say("Listo mi rey")
+		self.engine.runAndWait()
 
 	def play_music(self, tiempo):
 		if random.random() < self.rickroll_probability:
