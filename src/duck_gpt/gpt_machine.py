@@ -1,5 +1,6 @@
 import os
 import rospy
+from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y tipo Int32
 import smach
 import smach_ros
 from listen_machine import Listen
@@ -9,10 +10,13 @@ from rich import print
 
 class GPT(smach.State):
 	def __init__(self):
+		#Publicar en el topic /duckiebot/voz/resp
+		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
+
 		smach.State.__init__(self,
 					   outcomes=['succeeded', 'aborted'],
 					   input_keys=['prompt'])
-		openai.api_key = "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"
+		openai.api_key = "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"
 
 		self.context = {"role": "system",
 				"content": """
@@ -38,9 +42,7 @@ class GPT(smach.State):
 								4. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
 								responder "bailar X". Si no se especifica una cantidad, responder "bailar 5".
 							    
-								5. Si lo recibido es similar a "chiste" responder un chiste pero sin caracteres especiales,
-								sin ¿ o ¡.
-								"""}
+								5. Si lo recibido es similar a "chiste" responder un chiste original"""}
 		self.messages = [self.context]
 
 
@@ -61,13 +63,17 @@ class GPT(smach.State):
 		self.messages.append({"role": "assistant", "content": response_content})
 
 		print(f"[bold green]> [/bold green] [green]{response_content}[/green]")
-
+		# reemplazar los caracteres especiales por espacios
+		response_content = response_content.replace("¿", " ")
+		response_content = response_content.replace("¡", " ")
+		#Publicamos el la respuesta de chat_gpt en el topic /duckiebot/voz/resp
+		self.pub_instruccion.publish(response_content)
 		return 'succeeded'
 
 def getInstance():
 
 	rospy.init_node('gpt_machine')
-
+	
 	sm = smach.StateMachine(outcomes=[
 		'succeeded',
 		'aborted'

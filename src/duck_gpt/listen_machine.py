@@ -32,7 +32,7 @@ class Listen(smach.State):
 			with sr.Microphone() as source:
 				audio = self.r.adjust_for_ambient_noise(source, duration=2) # listen for 1 second to calibrate the energy threshold for ambient noise levels
 				audio = self.r.listen(source, phrase_time_limit=5, timeout=5)
-			prompt = self.r.recognize_google(audio)
+			prompt = self.r.recognize_google(audio, language="es-ES")
 			print("Google Speech Recognition thinks you said " + prompt)
 			userdata.prompt = prompt
 			return 'succeeded'

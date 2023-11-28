@@ -125,7 +125,7 @@ class Template(object):
 
 		self.pub_wheels.publish(self.wheels)
 
-		self.engine.say("Como te quedo el ojo?")
+		self.engine.say("Que tal?")
 		self.engine.runAndWait()
 
 		os.system("pkill mpg123")

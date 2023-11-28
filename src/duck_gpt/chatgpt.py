@@ -34,13 +34,13 @@ class Template(object):
 		self.args = args
 
 	
-		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=10	)
+		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
 
 		#self.sub_voz = rospy.Subscriber("/duckiebot/voz/mensaje_prueba", String, self.callback)
 		#rate = rospy.Rate(10) # 10hz
 	
 	def publicar(self):
-		openai.api_key = "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"
+		openai.api_key = "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"
 
 		print("💬 [bold green]ChatGPT API en Python[/bold green]")
 
@@ -58,7 +58,8 @@ class Template(object):
 								de una ciudad de patos llamada Duckietown con 100 habitantes. Tu misión es
 								transportar a los patos de un lugar a otro de la ciudad,
 								respondiendo a sus preguntas y resolviendo sus dudas. Responde
-								todas las dudas de manera breve y concisa en español, sin tildes. ¡Buena suerte!
+								todas las dudas de manera breve y concisa en español, sin tildes y sin carácteres.
+								¡Buena suerte!
 								Instrucciones: Toda instrucción recibida debe ser transformada a una de las siguientes
 								opcines en el formato indicado y responder solamente eso. Si la instrucción no es ninguna de las siguientes
 								responder según el contexto.
@@ -75,8 +76,7 @@ class Template(object):
 								4. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
 								responder "bailar X". Si no se especifica una cantidad, responder "bailar 5".
 							    
-								5. Si lo recibido es similar a "chiste" responder un chiste pero sin caracteres especiales,
-								sin ¿ o ¡.
+								5. Si lo recibido es similar a "chiste" responder un chiste.
 								"""}
 		
 		messages = [context]
@@ -107,8 +107,9 @@ class Template(object):
 
 			# publicar el texto en el topic /duckiebot/voz/instruccion
 			msg = String()
-			# reemplazar los caracteres especiales por un espacio
-			msg.translate({ord('¿'):ord(' '), ord('¡'):ord(' ')})
+			# reemplazar los caracteres especiales por espacios
+			response_content = response_content.replace("¿", " ")
+			response_content = response_content.replace("¡", " ")
 			msg.data = str(response_content)
 			self.pub_instruccion.publish(msg)
 
