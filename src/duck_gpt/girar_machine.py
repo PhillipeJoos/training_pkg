@@ -1,24 +1,17 @@
 import rospy
 import smach
-
-"""
-class Avanzar(smach.State):
-
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['succeeded'], input_keys=['distance'])
-
-    def execute(self, userdata):
-        rospy.loginfo('Executing state Avanzar')
-        rospy.loginfo('Avanzar ' + str(userdata.distance) + ' metros')
-        return 'succeeded'
-"""
+from std_msgs.msg import String
 
 class Girar(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['succeeded'], input_keys=['direction', 'angle'])
     
+        self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
+
     def execute(self, userdata):
         rospy.loginfo('Executing state Girar')
         rospy.loginfo('Girar ' + userdata.direction + ' ' + str(userdata.angle) + ' grados')
+
+        self.pub_instruccion.publish("girar " + userdata.direction + ' ' + str(userdata.angle))
         return 'succeeded'

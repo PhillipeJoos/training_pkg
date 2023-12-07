@@ -21,7 +21,8 @@ class GPT(smach.State):
 					   outcomes=['succeeded', 'aborted', 'avanzar', 'girar', 'bailar', 'chat'],
 					   input_keys=['prompt'],
 					   output_keys=['distance', 'direction', 'time', 'angle', 'response'])
-		openai.api_key = "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"
+		with open("api_key.txt") as f:
+			openai.api_key = f.read()
 
 		self.context = {"role": "system",
 				"content": """

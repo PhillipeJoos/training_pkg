@@ -1,6 +1,6 @@
 import rospy
 import smach
-import smach_ros
+from std_msgs.msg import String
 
 class Avanzar(smach.State):
 
@@ -13,6 +13,6 @@ class Avanzar(smach.State):
         rospy.loginfo('Executing state Avanzar')
         rospy.loginfo('Avanzar ' + str(userdata.distance) + ' centimetros')
 
-        self.pub_instruccion.publish("Avanzar " + str(userdata.distance) + " centimetros")
+        self.pub_instruccion.publish("avanzar " + str(userdata.distance))
         return 'succeeded'
         
