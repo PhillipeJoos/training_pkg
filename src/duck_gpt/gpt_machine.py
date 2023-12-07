@@ -8,7 +8,7 @@ from avanzar_machine import Avanzar
 from bailar_machine import Bailar
 from girar_machine import Girar
 from chat_machine import Chat
-import openai
+from openai import OpenAI
 import typer
 from rich import print
 
@@ -16,13 +16,16 @@ class GPT(smach.State):
 	def __init__(self):
 		#Publicar en el topic /duckiebot/voz/resp
 		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
+		
+		#with open("api_key.txt") as f:
+		#	self.client = OpenAI(api_key=f.read())
+		self.client = OpenAI(api_key="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")
 
 		smach.State.__init__(self,
 					   outcomes=['succeeded', 'aborted', 'avanzar', 'girar', 'bailar', 'chat'],
 					   input_keys=['prompt'],
 					   output_keys=['distance', 'direction', 'time', 'angle', 'response'])
-		with open("api_key.txt") as f:
-			openai.api_key = f.read()
+
 
 		self.context = {"role": "system",
 				"content": """
@@ -61,8 +64,7 @@ class GPT(smach.State):
 			print("🤷‍♂️ No has dicho nada")
 			return "aborted"
 		
-		response = openai.ChatCompletion.create(
-			model="gpt-4", messages=self.messages)
+		response = self.client.chat.completions.create(model="gpt-4", messages=self.messages)
 
 		response_content = response.choices[0].message.content
 

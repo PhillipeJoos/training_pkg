@@ -5,7 +5,9 @@ from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y 
 from geometry_msgs.msg import Twist # importar mensajes de ROS tipo geometry / Twist
 import time
 from ctypes import *
-import openai  # pip install openai
+from openai import OpenAI
+
+client = OpenAI(api_key="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")  # pip install openai
 import typer  # pip install "typer[all]"
 from rich import print  # pip install rich
 from rich.table import Table
@@ -40,7 +42,6 @@ class Template(object):
 		#rate = rospy.Rate(10) # 10hz
 	
 	def publicar(self):
-		openai.api_key = "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"
 
 		print("💬 [bold green]ChatGPT API en Python[/bold green]")
 
@@ -96,8 +97,7 @@ class Template(object):
 				print("🤷‍♂️ No has dicho nada")
 				continue
 			
-			response = openai.ChatCompletion.create(
-				model="gpt-4", messages=messages)
+			response = client.chat.completions.create(model="gpt-4", messages=messages)
 
 			response_content = response.choices[0].message.content
 
