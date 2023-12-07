@@ -4,6 +4,10 @@ from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y 
 import smach
 import smach_ros
 from listen_machine import Listen
+from avanzar_machine import Avanzar
+from bailar_machine import Bailar
+from girar_machine import Girar
+from chat_machine import Chat
 import openai
 import typer
 from rich import print
@@ -14,9 +18,10 @@ class GPT(smach.State):
 		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
 
 		smach.State.__init__(self,
-					   outcomes=['succeeded', 'aborted'],
-					   input_keys=['prompt'])
-		openai.api_key = "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"
+					   outcomes=['succeeded', 'aborted', 'avanzar', 'girar', 'bailar', 'chat'],
+					   input_keys=['prompt'],
+					   output_keys=['distance', 'direction', 'time', 'angle', 'response'])
+		openai.api_key = "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"
 
 		self.context = {"role": "system",
 				"content": """
@@ -36,13 +41,13 @@ class GPT(smach.State):
 								2. Si lo recibido es similar a "girar" en una cierta direccion un cierto angulo responder,
 								"girar direccion angulo". Si no se especifica un angulo responder "girar direccion 360". Si no
 								se especifica una direccion responder "girar izquierda angulo". 
-								
-								3. Si lo recibido es similar a "parar" o "detente" responder "parar".
 
-								4. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
+								3. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
 								responder "bailar X". Si no se especifica una cantidad, responder "bailar 5".
 							    
-								5. Si lo recibido es similar a "chiste" responder un chiste original"""}
+								4. Si lo recibido es similar a "chiste" responder un chiste original
+								
+								5. Si lo recibido es similar a "adiós" o "apagar" responder "shutdown" y terminar la conversación."""}
 		self.messages = [self.context]
 
 
@@ -67,8 +72,27 @@ class GPT(smach.State):
 		response_content = response_content.replace("¿", " ")
 		response_content = response_content.replace("¡", " ")
 		#Publicamos el la respuesta de chat_gpt en el topic /duckiebot/voz/resp
-		self.pub_instruccion.publish(response_content)
-		return 'succeeded'
+		#self.pub_instruccion.publish(response_content)
+
+		if response_content == "shutdown":
+			return "succeeded"
+		
+		instruccion = response_content.split()[0]
+
+		if instruccion == "avanzar":
+			userdata.distance = response_content.split()[1]
+			return "avanzar"
+		elif instruccion == "girar":
+			userdata.direction = response_content.split()[1]
+			userdata.angle = response_content.split()[2]
+			return "girar"
+		elif instruccion == "bailar":
+			userdata.time = response_content.split()[1]
+			return "bailar"
+		else:
+			userdata.response = response_content
+			return "chat"
+		
 
 def getInstance():
 
@@ -76,7 +100,7 @@ def getInstance():
 	
 	sm = smach.StateMachine(outcomes=[
 		'succeeded',
-		'aborted'
+		'aborted',
 		])
 	
 	with sm:
@@ -91,9 +115,34 @@ def getInstance():
 
 		smach.StateMachine.add('GPT', GPT(),
 							   transitions = {
-								   'succeeded':'Listen',
-								   'aborted': 'Listen'
+								   'aborted': 'Listen',
+								   'succeeded': 'succeeded',
+								   'avanzar': 'Avanzar',
+								   'girar': 'Girar',
+								   'bailar': 'Bailar',
+								   'chat': 'Chat'
 								   })
+		
+		smach.StateMachine.add('Avanzar', Avanzar(),
+							   transitions = {
+								   'succeeded':'Listen'
+								   })
+		
+		smach.StateMachine.add('Girar', Girar(),
+							   transitions = {
+								   'succeeded':'Listen'
+								   })
+
+		smach.StateMachine.add('Bailar', Bailar(),
+							   transitions = {
+								   'succeeded':'Listen'
+								   })
+		
+		smach.StateMachine.add('Chat', Chat(),
+							   transitions = {
+								   'succeeded':'Listen'
+								   })
+						 
 
 	sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
 	sis.start()

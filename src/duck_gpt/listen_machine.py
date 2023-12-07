@@ -66,8 +66,15 @@ def getInstance():
 								   'failed': 'Listen',
 								   'aborted': 'aborted'
 								   })
-		
+	
+	sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
+	sis.start()
+
 	sm.execute()
 
+	rospy.spin()
+	sis.stop()
+	
 if __name__ == '__main__':
+	
 	getInstance()
