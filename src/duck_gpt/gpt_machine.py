@@ -18,7 +18,8 @@ class GPT(smach.State):
 		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
 		
 		with open("../api_key/api_key.txt", "r") as f:
-			self.client = OpenAI(api_key=f.read())
+			key = f.read().strip()
+			self.client = OpenAI(api_key=key)
 
 		smach.State.__init__(self,
 					   outcomes=['succeeded', 'aborted', 'avanzar', 'girar', 'bailar', 'chat'],
