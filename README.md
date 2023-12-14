@@ -1,6 +1,6 @@
 # DuckGPT: Duck-Robot Interaction 🦆🤖
 <h3 align="center">
-    <img src="src/media/duck.png" width=100 alt="Banner">
+    <img src="src/media/DuckGPT_banner.png" alt="Banner">
 </h3>
 
 # Improving quality of life for ducks
