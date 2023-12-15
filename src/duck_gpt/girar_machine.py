@@ -1,6 +1,7 @@
 import rospy
 import smach
 from std_msgs.msg import String
+from speak import speak
 
 class Girar(smach.State):
 
@@ -13,5 +14,9 @@ class Girar(smach.State):
         rospy.loginfo('Executing state Girar')
         rospy.loginfo('Girar ' + userdata.direction + ' ' + str(userdata.angle) + ' grados')
 
+        speak("Girando " + userdata.direction + " " + str(userdata.angle) + " grados")
+
         self.pub_instruccion.publish("girar " + userdata.direction + ' ' + str(userdata.angle))
+
+        speak("Listo")
         return 'succeeded'

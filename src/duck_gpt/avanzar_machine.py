@@ -1,6 +1,8 @@
 import rospy
 import smach
 from std_msgs.msg import String
+from speak import speak
+import time
 
 class Avanzar(smach.State):
 
@@ -13,6 +15,11 @@ class Avanzar(smach.State):
         rospy.loginfo('Executing state Avanzar')
         rospy.loginfo('Avanzar ' + str(userdata.distance) + ' centimetros')
 
+        speak("Avanzando " + str(userdata.distance) + " centimetros")
+
         self.pub_instruccion.publish("avanzar " + str(userdata.distance))
+
+        tiempo = float(userdata.distance) / 38
+        time.sleep(tiempo)
+        speak("Listo")
         return 'succeeded'
-        

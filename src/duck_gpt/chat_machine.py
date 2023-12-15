@@ -1,6 +1,7 @@
 import rospy
 import smach
 from std_msgs.msg import String
+from speak import speak
 
 class Chat(smach.State):
 
@@ -13,5 +14,6 @@ class Chat(smach.State):
         rospy.loginfo('Executing state Chat')
         rospy.loginfo('Chat ' + userdata.response)
 
-        self.pub_instruccion.publish(userdata.response)
+        speak(userdata.response)
+
         return 'succeeded'
