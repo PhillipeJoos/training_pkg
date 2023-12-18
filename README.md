@@ -59,7 +59,7 @@ The project was made using the following hardware for the chasis:
     <img src="src/media/chasis.png" alt="Chasis">
 </h3>
 
-In cooperation with a Raspberry Pi 3 Model B to control the motors and a Jetson NANO Dev Kit to comunnicate with ChatGPT and gTTS. The last one can be any computer with Ubuntu 22.04 OS, but is recommended a Dev Kit for its size, thus making the robot in no need to link with another external computer via ethernet.
+In cooperation with a Raspberry Pi 3 Model B to control the motors that is connected throught a ethernet cable to a Jetson NANO Dev Kit to comunnicate with ChatGPT and gTTS. The last one can be any computer with Ubuntu 22.04 OS, but is recommended a Dev Kit for its size, thus making the robot in no need to link with another external computer via ethernet.
 
 # Prerequisites ✅
 
@@ -86,10 +86,20 @@ pip install gtts openai roslibpy typer rich
 
 # Usage 🔧
 
-Inside the directory ```training_pkg/```
+Inside the directory ```training_pkg/src/``` you need to create a directory named ```api_key/``` with a single text file ```api_key.txt``` that contains a token for your openai account.
+
+In the Raspberry Pi run ```roslaunch ros_cap duckie_core.launch veh:=duckiebot rect:=true``` to initialize ROS. In the Jetson NANO export ROS_IP and ROS_MASTER to connect the Jetson to ROS in the Raspberry Pi.
+
+To test the robot, first run ```training_pkg/src/instrucciones.py``` in the Raspberry Pi via ssh throught the Jetson NANO, and then in the Jetson NANO execute the file ```training_pkg/src/duck_gpt/gpt_machine.py``` to listen for commands and send the prompts to ChatGPT for further processing.
 
 # Acknowledgments
 
 Special thanks to the Duckietown community for inspiration and support.
 
 # Contact 📲
+
+The team behind DuckGPT is listed below:
+
+- Phillipe Joos (Ingeniere Trainee): philipejoos@gmail.com
+- Fernando Muñoz (Ingeniere Trainee): fernando.munoz.o@ug.uchile.cl
+- Sebastián Morales (Ingeniere Trainee): sebmorales@ug.uchile.cl
