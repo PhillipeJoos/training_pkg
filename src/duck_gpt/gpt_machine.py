@@ -14,19 +14,21 @@ from rich import print
 
 class GPT(smach.State):
 	def __init__(self):
-		#Publicar en el topic /duckiebot/voz/resp
+		# Publishers
 		self.pub_instruccion = rospy.Publisher("/duckiebot/voz/resp", String, queue_size=1)
 		
+		# iniciar ChatGPT con la key que se encuentra en el archivo api_key.txt
 		with open("../api_key/api_key.txt", "r") as f:
 			key = f.read().strip()
 			self.client = OpenAI(api_key=key)
 
+		# definición de estados, entradas y salidas
 		smach.State.__init__(self,
 					   outcomes=['succeeded', 'aborted', 'avanzar', 'girar', 'bailar', 'chat'],
 					   input_keys=['prompt'],
 					   output_keys=['distance', 'direction', 'time', 'angle', 'response'])
 
-
+		# definición del contexto para ChatGPT, donde se especifica las instrucciones
 		self.context = {"role": "system",
 				"content": """
 								Nombre: DuckNorris
@@ -54,34 +56,41 @@ class GPT(smach.State):
 								5. Si lo recibido es similar a "adiós" o "apagar" responder "shutdown" y terminar la conversación."""}
 		self.messages = [self.context]
 
-
+	# función que se ejecuta al entrar al estado
 	def execute(self, userdata):
+		# se extrae la solicitud del usuario
 		content = userdata.prompt
 
+		# se agrega la solicitud del usuario al contexto
 		self.messages.append({"role": "user", "content": content})
 
 		if not content:
 			print("🤷‍♂️ No has dicho nada")
 			return "aborted"
 		
+		# se envía el mensaje para ser procesado por ChatGPT (gpt-4)
 		response = self.client.chat.completions.create(model="gpt-4", messages=self.messages)
 
+		# se extrae la respuesta de ChatGPT
 		response_content = response.choices[0].message.content
 
 		self.messages.append({"role": "assistant", "content": response_content})
 
+		# se imprime la respuesta de ChatGPT para debugging
 		print(f"[bold green]> [/bold green] [green]{response_content}[/green]")
+
 		# reemplazar los caracteres especiales por espacios
 		response_content = response_content.replace("¿", " ")
 		response_content = response_content.replace("¡", " ")
-		#Publicamos el la respuesta de chat_gpt en el topic /duckiebot/voz/resp
-		#self.pub_instruccion.publish(response_content)
-
+		
+		# si la respuesta es "shutdown" terminar la conversación
 		if response_content == "shutdown":
 			return "succeeded"
 		
+		# extraer la instrucción de la respuesta
 		instruccion = response_content.split()[0]
 
+		# si la instrucción es una de las siguientes, extraer los parámetros y pasar al estado correspondiente
 		if instruccion == "avanzar":
 			userdata.distance = response_content.split()[1]
 			return "avanzar"
@@ -91,21 +100,26 @@ class GPT(smach.State):
 			return "girar"
 		elif instruccion == "bailar":
 			userdata.time = response_content.split()[1]
-			return "bailar"
+			return "bailar" 
+		# si la instruccion no es ninguna de las anteriores pasar al estado Chat
 		else:
 			userdata.response = response_content
 			return "chat"
 		
-
+# Inicializar el nodo de ROS y la máquina de estados principal
 def getInstance():
 
+	# Inicializar el nodo de ROS
 	rospy.init_node('gpt_machine')
 	
+	# Inicializar la máquina de estados
 	sm = smach.StateMachine(outcomes=[
 		'succeeded',
 		'aborted',
 		])
 	
+	# Agregar los estados a las máquinas de estados, notar que las maquinas de acciones nunca fallan
+	# pasan a listen directamente
 	with sm:
 
 		smach.StateMachine.add('Listen', Listen(), 
@@ -146,12 +160,14 @@ def getInstance():
 								   'succeeded':'Listen'
 								   })
 						 
-
+	# Iniciar el servidor de introspección de ROS para ver el diagrama de flujo de la maquina de estados
 	sis = smach_ros.IntrospectionServer('server_name', sm, '/SM_ROOT')
 	sis.start()
 
+	# Ejecutar la máquina principal
 	sm.execute()
 
+	# Mantener el nodo de ROS activo
 	rospy.spin()
 	sis.stop()
 
