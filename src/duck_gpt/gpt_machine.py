@@ -46,7 +46,8 @@ class GPT(smach.State):
 
 								2. Si lo recibido es similar a "girar" en una cierta direccion un cierto angulo responder,
 								"girar direccion angulo". Si no se especifica un angulo responder "girar direccion 360". Si no
-								se especifica una direccion responder "girar izquierda angulo". 
+								se especifica una direccion responder "girar izquierda angulo". Si el angulo se especifica en
+								radianes transformarlo a grados. 
 
 								3. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
 								responder "bailar X". Si no se especifica una cantidad, responder "bailar 5".
