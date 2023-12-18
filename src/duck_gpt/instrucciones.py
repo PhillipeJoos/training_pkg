@@ -3,7 +3,6 @@
 import rospy #importar ros para python
 from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist # importar mensajes de ROS tipo geometry / Twist
-import pyttsx3
 import os
 import threading
 import time
@@ -22,11 +21,7 @@ class Template(object):
 		self.pub_wheels = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 1)
 		self.wheels = WheelsCmdStamped()
 
-		self.engine = pyttsx3.init()
-		self.engine.setProperty('voice', 'spanish-latin-am')
-		self.engine.setProperty('volume', 5.0)
-		self.engine.setProperty('rate', 150)
-
+		# definimos un diccionario de instrucciones
 		self.instrucciones = {
 			"avanzar": self.avanzar,
 			"bailar": self.bailar,
@@ -34,62 +29,56 @@ class Template(object):
 			"girar": self.girar
 		}
 
-		self.dance_music = "portal_radio_song.mp3"
-		self.rickroll_music = "rickroll.mp3"
+		# fijamos una velocidad de avance
+		self.velocidad = 37 # cm/s valor obtenido experimentalmente 
 
-		self.rickroll_probability = 1.0
-
-		self.velocidad = 38 # cm/s
-
-		self.engine.say("Quack quack!!!")
-		self.engine.runAndWait()
+		print("Listo para recibir instrucciones")
 
 	def callback_instruccion(self, msg):
+		# seperar instruccion y parametros
 		mensaje = msg.data.split()
 		instruccion = mensaje[0]
 		parametros = mensaje[1:]
 		
+		# ejecutar instruccion si esta en el diccionario
 		if instruccion in self.instrucciones:
 			self.instrucciones[instruccion](parametros)
-		else:
-			self.engine.say(msg.data)
-			self.engine.runAndWait()
 	
+	#instruccion para avanzar
 	def avanzar(self, parametros):
+		# obtener distancia
 		distancia = parametros[0]
+		print("Avanzando: " + distancia)
 		# avanzar una cantidad "distancia"
 		tiempo = float(distancia) / self.velocidad
-		self.engine.say("Avanzando " + distancia + " centimetros")
-		self.engine.runAndWait()
 
 		# publicar instruccion
+		# fijar velocidades de las ruedas
 		self.wheels.vel_left = -1
 		self.wheels.vel_right = -1
 
 		self.pub_wheels.publish(self.wheels)
 
+		# esperar un tiempo para que avance la distancia deseada
 		time.sleep(tiempo)
 
 		# detenerse
 		self.wheels.vel_left = 0
 		self.wheels.vel_right = 0
 
+		# publicar detencion
 		self.pub_wheels.publish(self.wheels)
 
-		self.engine.say("Listo mi rey")
-		self.engine.runAndWait()
-
+	#instruccion para bailar
 	def bailar(self, parametros):
+		# obtener tiempo
 		tiempo = parametros[0]
-
-		self.engine.say("Asi se baila en Duckietown")
-		self.engine.runAndWait()
-
-		threading.Thread(target=self.play_music, args=(float(tiempo),)).start()
-
+		print("Baiando por: " + tiempo)
+		
+		#fijar una velocidad de baile
 		vel_baile = 0.7
 
-		# alternar entre girar derecha y girar izquierda
+		# alternar entre girar derecha y girar izquierda publicando velocidades
 		for i in range(int(tiempo) // 2):
 			self.wheels.vel_left = vel_baile
 			self.wheels.vel_right = -vel_baile
@@ -105,6 +94,7 @@ class Template(object):
 
 			time.sleep(0.5)
 		
+		# alternar entre avanzar y retroceder publicando velocidades
 		for i in range(int(tiempo) // 2):
 			self.wheels.vel_left = vel_baile
 			self.wheels.vel_right = vel_baile
@@ -120,49 +110,37 @@ class Template(object):
 
 			time.sleep(0.5)
 
+		# detener el baile
 		self.wheels.vel_left = 0
 		self.wheels.vel_right = 0
 
 		self.pub_wheels.publish(self.wheels)
 
-		self.engine.say("Que tal?")
-		self.engine.runAndWait()
-
-		os.system("pkill mpg123")
-
-	def parar(self, parametros):
-		self.engine.say("Deteniendome")
-		self.engine.runAndWait()
-
-		self.wheels.vel_left = 0
-		self.wheels.vel_right = 0
-
-		self.pub_wheels.publish(self.wheels)
-
-		exit()
-
+	#instruccion para girar
 	def girar(self, parametros):
+		# obtener direccion y angulo
 		direccion = parametros[0]
 		angulo = parametros[1]
-
-		self.engine.say("Girando " + direccion + " " + angulo + " grados")
-		self.engine.runAndWait()
+		print("Girando: " + direccion + " " + angulo)
 
 		# girar una cantidad "angulo"
-		tiempo = (float(angulo)) / 90 
-		tiempo = tiempo * 0.4
+		
 
+		# girar una cantidad "angulo"
+		tiempo = (float(angulo)) / 171.5 # 171.5 es un valor que se obtuvo experimentalmente
+
+		# publicar giro a partir de velocidades
 		if direccion == "izquierda":
-			self.wheels.vel_left = 1
-			self.wheels.vel_right = -1
+			self.wheels.vel_left = -1
+			self.wheels.vel_right = 1
 
 			self.pub_wheels.publish(self.wheels)
 			
 			time.sleep(tiempo)
 			
 		elif direccion == "derecha":
-			self.wheels.vel_left = -1
-			self.wheels.vel_right = 1
+			self.wheels.vel_left = 1
+			self.wheels.vel_right = -1
 
 			self.pub_wheels.publish(self.wheels)
 
@@ -173,17 +151,6 @@ class Template(object):
 		self.wheels.vel_right = 0
 
 		self.pub_wheels.publish(self.wheels)
-
-		self.engine.say("Listo mi rey")
-		self.engine.runAndWait()
-
-	def play_music(self, tiempo):
-		if random.random() < self.rickroll_probability:
-			os.system("mpg123 " + self.rickroll_music)
-		else:
-			os.system("mpg123 " + self.dance_music) 
-
-		exit()
 
 def main():
 	rospy.init_node('escucha') #creacion y registro del nodo!
