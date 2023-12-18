@@ -25,7 +25,6 @@ class Template(object):
 		self.instrucciones = {
 			"avanzar": self.avanzar,
 			"bailar": self.bailar,
-			"parar": self.parar,
 			"girar": self.girar
 		}
 
