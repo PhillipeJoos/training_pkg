@@ -3,6 +3,7 @@ import smach
 from std_msgs.msg import String
 from speak import speak
 import time
+from play_music import play_music
 
 class Bailar(smach.State):
     
@@ -25,7 +26,9 @@ class Bailar(smach.State):
 
             # esperamos el tiempo necesario para bailar el tiempo deseado
             tiempo = float(userdata.time)
-            time.sleep(tiempo)
+            
+            # reproducir música
+            play_music("chipi.mp3", tiempo)
 
             # reproducir mensaje de completado
             speak("Listo")
