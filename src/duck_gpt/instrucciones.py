@@ -3,7 +3,6 @@
 import rospy #importar ros para python
 from std_msgs.msg import String, Int32 # importar mensajes de ROS tipo String y tipo Int32
 from geometry_msgs.msg import Twist # importar mensajes de ROS tipo geometry / Twist
-import pyttsx3
 import os
 import threading
 import time
@@ -22,11 +21,6 @@ class Template(object):
 		self.pub_wheels = rospy.Publisher("/duckiebot/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size = 1)
 		self.wheels = WheelsCmdStamped()
 
-		self.engine = pyttsx3.init()
-		self.engine.setProperty('voice', 'spanish-latin-am')
-		self.engine.setProperty('volume', 5.0)
-		self.engine.setProperty('rate', 150)
-
 		self.instrucciones = {
 			"avanzar": self.avanzar,
 			"bailar": self.bailar,
@@ -39,10 +33,9 @@ class Template(object):
 
 		self.rickroll_probability = 1.0
 
-		self.velocidad = 38 # cm/s
+		self.velocidad = 37 # cm/s
 
-		self.engine.say("Quack quack!!!")
-		self.engine.runAndWait()
+		print("Listo para recibir instrucciones")
 
 	def callback_instruccion(self, msg):
 		mensaje = msg.data.split()
@@ -51,17 +44,13 @@ class Template(object):
 		
 		if instruccion in self.instrucciones:
 			self.instrucciones[instruccion](parametros)
-		else:
-			self.engine.say(msg.data)
-			self.engine.runAndWait()
 	
 	def avanzar(self, parametros):
 		distancia = parametros[0]
+		print(distancia)
 		# avanzar una cantidad "distancia"
 		tiempo = float(distancia) / self.velocidad
-		self.engine.say("Avanzando " + distancia + " centimetros")
-		self.engine.runAndWait()
-
+		print("ya hable")
 		# publicar instruccion
 		self.wheels.vel_left = -1
 		self.wheels.vel_right = -1
@@ -76,17 +65,10 @@ class Template(object):
 
 		self.pub_wheels.publish(self.wheels)
 
-		self.engine.say("Listo mi rey")
-		self.engine.runAndWait()
-
 	def bailar(self, parametros):
 		tiempo = parametros[0]
-
-		self.engine.say("Asi se baila en Duckietown")
-		self.engine.runAndWait()
-
-		threading.Thread(target=self.play_music, args=(float(tiempo),)).start()
-
+		print(tiempo)
+		
 		vel_baile = 0.7
 
 		# alternar entre girar derecha y girar izquierda
@@ -125,14 +107,7 @@ class Template(object):
 
 		self.pub_wheels.publish(self.wheels)
 
-		self.engine.say("Como te quedo el ojo?")
-		self.engine.runAndWait()
-
-		os.system("pkill mpg123")
-
 	def parar(self, parametros):
-		self.engine.say("Deteniendome")
-		self.engine.runAndWait()
 
 		self.wheels.vel_left = 0
 		self.wheels.vel_right = 0
@@ -142,27 +117,25 @@ class Template(object):
 		exit()
 
 	def girar(self, parametros):
+		print(parametros)
 		direccion = parametros[0]
 		angulo = parametros[1]
 
-		self.engine.say("Girando " + direccion + " " + angulo + " grados")
-		self.engine.runAndWait()
-
 		# girar una cantidad "angulo"
 		tiempo = (float(angulo)) / 90 
-		tiempo = tiempo * 0.4
+		tiempo = tiempo * 0.525
 
 		if direccion == "izquierda":
-			self.wheels.vel_left = 1
-			self.wheels.vel_right = -1
+			self.wheels.vel_left = -1
+			self.wheels.vel_right = 1
 
 			self.pub_wheels.publish(self.wheels)
 			
 			time.sleep(tiempo)
 			
 		elif direccion == "derecha":
-			self.wheels.vel_left = -1
-			self.wheels.vel_right = 1
+			self.wheels.vel_left = 1
+			self.wheels.vel_right = -1
 
 			self.pub_wheels.publish(self.wheels)
 
@@ -173,9 +146,6 @@ class Template(object):
 		self.wheels.vel_right = 0
 
 		self.pub_wheels.publish(self.wheels)
-
-		self.engine.say("Listo mi rey")
-		self.engine.runAndWait()
 
 	def play_music(self, tiempo):
 		if random.random() < self.rickroll_probability:
@@ -189,6 +159,8 @@ def main():
 	rospy.init_node('escucha') #creacion y registro del nodo!
 
 	obj = Template('args') # Crea un objeto del tipo Template, cuya definicion se encuentra arriba
+
+	#obj.speak("Quack quack!!!")
 
 	#obj.publicar() #llama al metodo publicar del objeto obj de tipo Template
 
