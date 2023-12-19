@@ -100,6 +100,6 @@ Special thanks to the Duckietown community for inspiration and support.
 
 The team behind DuckGPT is listed below:
 
-- Phillipe Joos (Ingeniere Trainee): philipejoos@gmail.com
+- Phillipe Joos (Ingeniere Trainee): phillipe.joos@ug.uchile.cl
 - Fernando Muñoz (Ingeniere Trainee): fernando.munoz.o@ug.uchile.cl
 - Sebastián Morales (Ingeniere Trainee): sebmorales@ug.uchile.cl
