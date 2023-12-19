@@ -46,7 +46,7 @@ class Listen(smach.State):
 			return 'aborted'
 		except sr.WaitTimeoutError:
 			print("No se ha detectado audio")
-			return 'aborted'
+			return 'failed'
 
 # Este getInstance() solo se ejecuta si este archivo es el principal
 def getInstance():

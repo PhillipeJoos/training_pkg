@@ -11,6 +11,7 @@ from chat_machine import Chat
 from openai import OpenAI
 import typer
 from rich import print
+from speak import speak
 
 class GPT(smach.State):
 	def __init__(self):
@@ -51,7 +52,7 @@ class GPT(smach.State):
 
 								3. Si lo recibido es similar a "bailar" una cierta cantidad de tiempo
 								responder "bailar X". Si no se especifica una cantidad, responder "bailar 5".
-							    
+								
 								4. Si lo recibido es similar a "chiste" responder un chiste original
 								
 								5. Si lo recibido es similar a "adiós" o "apagar" responder "shutdown" y terminar la conversación."""}
@@ -86,6 +87,7 @@ class GPT(smach.State):
 		
 		# si la respuesta es "shutdown" terminar la conversación
 		if response_content == "shutdown":
+			speak("Apagando todos los sistemas")
 			return "succeeded"
 		
 		# extraer la instrucción de la respuesta
