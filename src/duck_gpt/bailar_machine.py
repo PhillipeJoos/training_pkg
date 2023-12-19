@@ -4,6 +4,7 @@ from std_msgs.msg import String
 from speak import speak
 import time
 from play_music import play_music
+import random
 
 class Bailar(smach.State):
     
@@ -28,7 +29,8 @@ class Bailar(smach.State):
             tiempo = float(userdata.time)
             
             # reproducir música
-            play_music("chipi.mp3", tiempo)
+            canciones = ["chipi.mp3", "portal.mp3", "rickroll.mp3"]
+            play_music(random.choice(canciones), tiempo)
 
             # reproducir mensaje de completado
             speak("Listo")
